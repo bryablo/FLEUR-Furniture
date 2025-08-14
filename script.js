@@ -1,4 +1,3 @@
-// Защита от XSS и других атак
 document.addEventListener('DOMContentLoaded', function() {
     document.body.classList.add('loaded');
     let devtools = {
@@ -12,14 +11,55 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!devtools.open) {
                 devtools.open = true;
                 console.warn('Developer tools detected');
-                // Здесь раньше, вероятно, был window.location.reload() или подобное
             }
         } else {
             devtools.open = false;
         }
     }, 500);
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                const headerHeight = document.querySelector('.header').offsetHeight;
+                const offsetTop = target.offsetTop - headerHeight;
+                window.scrollTo({
+                    top: offsetTop,
+                    behavior: 'smooth'
+                });
+            }
+        });
+    });
+
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'translateY(0)';
+            }
+        });
+    }, observerOptions);
+
+    const animateElements = document.querySelectorAll('.advantage-item, .service-item');
+    animateElements.forEach(el => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(20px)';
+        el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+        observer.observe(el);
+    });
+
+    document.body.style.transition = 'opacity 0.5s ease';
+
+    if (window.self !== window.top) {
+        window.top.location = window.self.location;
+    }
 });
-// Безопасное открытие Telegram с тремя ссылками
+
 function safeOpenTelegram(type) {
     let telegramUrl;
     let message;
@@ -48,54 +88,4 @@ function safeOpenTelegram(type) {
             alert('Неверная ссылка');
         }
     }
-}
-// Плавная прокрутка
-document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', function (e) {
-        e.preventDefault();
-        const target = document.querySelector(this.getAttribute('href'));
-        if (target) {
-            target.scrollIntoView({
-                behavior: 'smooth',
-                block: 'start'
-            });
-        }
-    });
-});
-// Анимация при скролле
-const observerOptions = {
-    threshold: 0.1,
-    rootMargin: '0px 0px -50px 0px'
-};
-const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-        if (entry.isIntersecting) {
-            entry.target.style.opacity = '1';
-            entry.target.style.transform = 'translateY(0)';
-        }
-    });
-}, observerOptions);
-document.addEventListener('DOMContentLoaded', function() {
-    const animateElements = document.querySelectorAll('.advantage-item, .service-card, .portfolio-item');
-    // Обратите внимание: селектор .advantage-item больше не используется в новом HTML
-    // но оставлен для совместимости со старыми частями страницы, если они есть.
-    // Для новых элементов анимация не настроена в этом скрипте.
-    animateElements.forEach(el => {
-        el.style.opacity = '0';
-        el.style.transform = 'translateY(20px)';
-        el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-        observer.observe(el);
-    });
-});
-window.addEventListener('load', function() {
-    document.body.style.opacity = '1';
-});
-// --- ИСПРАВЛЕНИЕ ---
-// СЛЕДУЮЩАЯ СТРОКА УДАЛЕНА, ЧТОБЫ ИСПРАВИТЬ БЕЛЫЙ ЭКРАН
-// document.body.style.opacity = '0';
-// --- КОНЕЦ ИСПРАВЛЕНИЯ ---
-document.body.style.transition = 'opacity 0.5s ease';
-// Защита от фреймов
-if (window.self !== window.top) {
-    window.top.location = window.self.location;
 }
